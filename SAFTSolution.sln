@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33712.159
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SAFTReport.Console", "SAFTReport\SAFTReport.Console.csproj", "{2CDB055B-2F6C-4323-A822-34F2A170FB55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SAFTReport.Core", "SAFTReport.Core\SAFTReport.Core.csproj", "{46FE2E87-0736-4278-8D21-2B9C54206F40}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2CDB055B-2F6C-4323-A822-34F2A170FB55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CDB055B-2F6C-4323-A822-34F2A170FB55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CDB055B-2F6C-4323-A822-34F2A170FB55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CDB055B-2F6C-4323-A822-34F2A170FB55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46FE2E87-0736-4278-8D21-2B9C54206F40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46FE2E87-0736-4278-8D21-2B9C54206F40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46FE2E87-0736-4278-8D21-2B9C54206F40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46FE2E87-0736-4278-8D21-2B9C54206F40}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0E96B948-6C2A-463B-A0D8-8FA3DC3A0DFC}
+	EndGlobalSection
+EndGlobal
