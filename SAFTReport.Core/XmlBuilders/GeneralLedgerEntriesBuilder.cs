@@ -29,7 +29,12 @@ namespace SAFTReport.Core.XmlBuilders
         public XElement BuildSection(int month, int year)
         {
 
-            var transactionsList = dbContext.Transactions.Where(t => t.ReportingMonth == month && t.ReportingYear == year && t.AccountCCC !=null && !t.AccountCCC.StartsWith("8") && !t.AccountCCC.StartsWith("9")).ToList();
+            var transactionsList = dbContext.Transactions
+                .Where(t => t.ReportingMonth == month && 
+                       t.ReportingYear == year && 
+                       t.AccountCCC !=null && 
+                       !t.AccountCCC.StartsWith("8") && 
+                       !t.AccountCCC.StartsWith("9")).ToList();
             
             var customersInfo = dbContext.Customers
                 .Select(c => new {c.Name, c.Country, c.AccountCCC, c.AccountId, c.City, c.FiscalCode, c.Id})
@@ -222,9 +227,6 @@ namespace SAFTReport.Core.XmlBuilders
 
                 journal.Add(transactionElement);
                 p = p + 1;
-                Console.WriteLine("Id " + p);
-
-
             }
 
             section.Add(journal);

@@ -84,7 +84,7 @@ namespace SAFTReport.Core.AuditFileGenerator
                         owners.BuildSection(month, year),
                         assets.BuildSection(month, year)
                         ),
-                    new XElement("GeneralLedgerEntries",
+                   new XElement("GeneralLedgerEntries",
                         generalLedgerEntries.BuildSection(month, year).Elements()
                         ),
                     new XElement("SourceDocuments",
