@@ -87,7 +87,7 @@ namespace SAFTReport.Core.XmlBuilders
                 );
 
 
-            var p = 0;
+            
             foreach (var tranId in transactionsDict.Keys)
             {
 
@@ -97,6 +97,7 @@ namespace SAFTReport.Core.XmlBuilders
                 var postingDate = DateTime.ParseExact(transaction.PostingDate, "dd.MM.yyyy", CultureInfo.InvariantCulture).ToString("yyyy-MM-dd");
                 var customer = customersInfo.Values.FirstOrDefault(c => c.AccountId == transaction.CustomerId);
                 var supplier = suppliersInfo.Values.FirstOrDefault(s => s.AccountId == transaction.SupplierId);
+                
 
                 var customerID = "0";
                 var supplierID = "0";
@@ -108,12 +109,12 @@ namespace SAFTReport.Core.XmlBuilders
 
                 }
 
-                if (customer != null && customer.Name != null && customer.FiscalCode != null && customer.Country != null)
+                if (customer != null) //&& customer.Name != null && customer.FiscalCode != null && customer.Country != null
                 {
                     customerID = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountries);
                 }
 
-                if (supplier != null && supplier.Name != null && supplier.FiscalCode != null && supplier.Country != null)
+                if (supplier != null) //&& supplier.Name != null && supplier.FiscalCode != null && supplier.Country != null
                 {
                     supplierID = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountries);
                 }
@@ -207,7 +208,8 @@ namespace SAFTReport.Core.XmlBuilders
                                 taxInformation = CreateDefaultTaxInformation();
 
                             }
-                        } else
+                        }
+                        else
                         {
                             taxInformation = CreateDefaultTaxInformation();
                         }
@@ -226,7 +228,6 @@ namespace SAFTReport.Core.XmlBuilders
 
 
                 journal.Add(transactionElement);
-                p = p + 1;
             }
 
             section.Add(journal);

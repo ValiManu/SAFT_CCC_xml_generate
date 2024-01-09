@@ -173,14 +173,14 @@ namespace SAFTReport.Core.XmlBuilders
                 {
                     if (payment.HouseBk == "UNW01")
                     {
-                        if (payment.A == "D")
+                        if (payment.A == "D" && payment.Account != "1001011")
                         {
                             var customer = customers[payment.Account];
                             paymentModel.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
                             paymentModel.PaymentLine.SupplierId = "0";
                             payments.Add(dicKey++, paymentModel);
                         }
-                        else if (payment.A == "K")
+                        else if (payment.A == "K" && payment.Account != "1001011")
                         {
                             var supplier = suppliers[payment.Account];
                             paymentModel.PaymentLine.CustomerId = "0";

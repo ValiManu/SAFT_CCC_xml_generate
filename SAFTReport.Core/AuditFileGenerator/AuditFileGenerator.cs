@@ -67,8 +67,10 @@ namespace SAFTReport.Core.AuditFileGenerator
 
         public XDocument GenerateAuditFile(int month, int year)
         {
+
             XNamespace xmlns = "mfp:anaf:dgti:d406:declaratie:v1";
-            XNamespace xmlnsEmpty = "";
+            XNamespace noNamespace = "";
+           
             var auditFile = new XDocument(
                 new XElement("AuditFile",
                     header.BuildSection(month, year), 
@@ -95,8 +97,10 @@ namespace SAFTReport.Core.AuditFileGenerator
                         )
                 )
             );
-
+            
             return auditFile;
+
+        
         }
 
 
