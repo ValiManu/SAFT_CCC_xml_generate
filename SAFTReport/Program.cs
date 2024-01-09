@@ -43,15 +43,20 @@ var builder = Host.CreateDefaultBuilder(args)
 var host = builder.Build();
 using var serviceScope = host.Services.CreateScope();
 var services = serviceScope.ServiceProvider;
+Console.WriteLine("Luna Raportare: ");
+var month = int.Parse(Console.ReadLine());
+Console.WriteLine("An Raportare: ");
+var year = int.Parse(Console.ReadLine());
+Console.WriteLine("Procesarea a inceput.....");
 
 try
 {
-    var path = "C:\\Users\\Vali\\Desktop\\Repo\\SAFTSolution\\auditFile.xml";
+    var path = $"C:\\Users\\Vali\\Desktop\\Repo\\SAFT_CCC_xml_generate\\auditFile_{month}_{year}.xml";
     var validationService = services.GetRequiredService<ValidationService>();
     validationService.ValidateBalanceSheetAccounts();
 
     var auditFileGenerator = services.GetRequiredService<AuditFileGenerator>();
-    auditFileGenerator.SaveAuditFile(path, 10, 2023);
+    auditFileGenerator.SaveAuditFile(path, month, year);
     
 }
 catch (Exception ex)
@@ -59,3 +64,5 @@ catch (Exception ex)
     
     Console.WriteLine($"Error: {ex}");
 }
+
+Console.WriteLine($"Fisierul a fost generat in C:\\Users\\Vali\\Desktop\\Repo\\SAFT_CCC_xml_generate\\auditFile_{month}_{year}.xml ");

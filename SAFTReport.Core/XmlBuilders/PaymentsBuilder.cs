@@ -25,16 +25,19 @@ namespace SAFTReport.Core.XmlBuilders
         }
         public XElement BuildSection(int month, int year)
         {
-            var transactionsDictionary = dbContext.Transactions.Where(t =>
-                t.ReportingMonth == month &&
-                t.ReportingYear == year &&
-                t.AccountId == "1401107010" || 
-                t.AccountId == "1433107010" || 
-                t.AccountId == "1010000100" || 
-                t.AccountId == "1403102010" || 
-                t.AccountId == "1403107010").ToDictionary(t => t.Id, t => t);
-           
-            var paymentsDictionary = dbContext.Payments.Where(p => p.ReportingMonth == month && p.ReportingYear == year).ToDictionary(p => p.Id, p => p);
+            
+            var transactionPayments = dbContext.Transactions
+                .Where(t => t.ReportingMonth == month &&
+                       t.ReportingYear == year &&
+                       t.AccountId == "1401107010" ||
+                       t.AccountId == "1433107010" ||
+                       t.AccountId == "1010000100" ||
+                       t.AccountId == "1403102010" ||
+                       t.AccountId == "1403107010")
+                .Join(dbContext.Payments.Where(p => p.ReportingMonth == month && p.ReportingYear == year), 
+                       transaction => transaction.TransactioId,
+                       payment => payment.TransactionId,
+                       (transaction, payment) => new {Transaction = transaction, Payment = payment}).ToList();
 
             var accounts = dbContext.Accounts.ToList();
 
@@ -54,245 +57,197 @@ namespace SAFTReport.Core.XmlBuilders
 
             Dictionary<int, PaymentModel> payments = new Dictionary<int, PaymentModel>();
 
-            foreach(var transaction in transactionsDictionary.Values)
+            foreach(var tp in transactionPayments)
             {
-                var payment = new PaymentModel();
+                var transaction = tp.Transaction;
+                var payment = tp.Payment;
+                var paymentModel = new PaymentModel();
 
                 var amount = double.TryParse(transaction.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double result) ? result : 0;
-                payment.PaymentRefNo = transaction.TransactioId;
-                payment.TransactionDate = DateTime.ParseExact(transaction.PostingDate, "dd.MM.yyyy", CultureInfo.InvariantCulture).ToString("yyyy-MM-dd");
-                payment.PaymentMothod = "03";
-                payment.Description = transaction.Description;
-                payment.PaymentLine.AccountId = accounts.FirstOrDefault(a => a.AccountCCC == transaction.AccountCCC).AccountSAFT;
-                payment.PaymentLine.DebitCreditIndicator = amount > 0 ? "D" : "C";
-                payment.PaymentLine.Amount = amount;
-                payment.PaymentLine.CurrencyCode = transaction.Ccy;
-                payment.PaymentLine.CurrencyAmount = amount.ToString("F2", CultureInfo.InvariantCulture);
-                payment.PaymentLine.ExchangeRate = "1";
-                payment.PaymentLine.TaxType = "000";
-                payment.PaymentLine.TaxCode = "000000";
-                payment.PaymentLine.TaxAmount = "0.00";
-                payment.PaymentLine.TaxCurrencyCode = transaction.Ccy;
-                payment.PaymentLine.TaxCurrencyAmount = "0.00";
-                payment.PaymentLine.TaxExchangeRate = "1";
+                paymentModel.PaymentRefNo = transaction.TransactioId;
+                paymentModel.TransactionDate = DateTime.ParseExact(transaction.PostingDate, "dd.MM.yyyy", CultureInfo.InvariantCulture).ToString("yyyy-MM-dd");
+                paymentModel.PaymentMothod = "03";
+                paymentModel.Description = transaction.Description;
+                paymentModel.PaymentLine.AccountId = accounts.FirstOrDefault(a => a.AccountCCC == transaction.AccountCCC).AccountSAFT;
+                paymentModel.PaymentLine.DebitCreditIndicator = amount > 0 ? "D" : "C";
+                paymentModel.PaymentLine.Amount = amount;
+                paymentModel.PaymentLine.CurrencyCode = transaction.Ccy;
+                paymentModel.PaymentLine.CurrencyAmount = amount.ToString("F2", CultureInfo.InvariantCulture);
+                paymentModel.PaymentLine.ExchangeRate = "1";
+                paymentModel.PaymentLine.TaxType = "000";
+                paymentModel.PaymentLine.TaxCode = "000000";
+                paymentModel.PaymentLine.TaxAmount = "0.00";
+                paymentModel.PaymentLine.TaxCurrencyCode = transaction.Ccy;
+                paymentModel.PaymentLine.TaxCurrencyAmount = "0.00";
+                paymentModel.PaymentLine.TaxExchangeRate = "1";
 
                 if (transaction.AccountId == "1401107010")
                 {
-                    var paymentBs = paymentsDictionary.Values.FirstOrDefault(p => p.TransactionId == transaction.TransactioId);
-
-                    if (paymentBs != null)
+                    if (payment.ExTt != "66" && payment.ExTt != "72")
                     {
-
-                        if (paymentBs.ExTt != "66" && paymentBs.ExTt != "72")
-                        {
-                            payment.PaymentLine.CustomerId = "0030490303";
-                            payment.PaymentLine.SupplierId = "0030490303";
-
-                            payments.Add(dicKey++, payment);
-
-                        }
-
-                        if (paymentBs.ExTt == "66")
-                        {
-                            if (paymentBs.BankNumber == "/OB//RO49BTRL03")
-                            {
-                              
-                                payment.PaymentLine.CustomerId = "0021611392";
-                                payment.PaymentLine.SupplierId = "0";
-
-                                payments.Add(dicKey++, payment);
-                            }
-
-                            if (paymentBs.BankNumber == "/OB//RO80BACX00")
-                            {
-
-                                payment.PaymentLine.CustomerId = "01PL7792308495";
-                                payment.PaymentLine.SupplierId = "0";
-
-                                payments.Add(dicKey++, payment);
-                            }
-
-                            if (paymentBs.BankNumber == "/OB/RZBRROBU RO")
-                            {
-
-                                payment.PaymentLine.CustomerId = "0013838336";
-                                payment.PaymentLine.SupplierId = "0";
-
-                                payments.Add(dicKey++, payment);
-                            }
-
-                            if (paymentBs.BankNumber == "/OB/BTRLRO22 RO")
-                            {
-
-                                payment.PaymentLine.CustomerId = "0013838336";
-                                payment.PaymentLine.SupplierId = "0";
-
-                                payments.Add(dicKey++, payment);
-                            }
-                        }
-
-                        if(paymentBs.ExTt == "72")
-                        {
-                            var supplier = suppliers[paymentBs.Account];
-
-                            payment.PaymentLine.CustomerId = "0";
-                            payment.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
-
-                            payments.Add(dicKey++, payment);
-                        }
-
+                        paymentModel.PaymentLine.CustomerId = "0030490303";
+                        paymentModel.PaymentLine.SupplierId = "0030490303";
+                        payments.Add(dicKey++, paymentModel);
 
                     }
-                }
 
+                    if (payment.ExTt == "66")
+                    {
+                        if (payment.BankNumber == "/OB//RO49BTRL03")
+                        {
+                            paymentModel.PaymentLine.CustomerId = "0021611392";
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+
+                        if (payment.BankNumber == "/OB//RO80BACX00")
+                        {
+                            paymentModel.PaymentLine.CustomerId = "01PL7792308495";
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                        if (payment.BankNumber == "/OB/RZBRROBU RO")
+                        {
+
+                            paymentModel.PaymentLine.CustomerId = "0013838336";
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+
+                        if (payment.BankNumber == "/OB/BTRLRO22 RO")
+                        {
+                            paymentModel.PaymentLine.CustomerId = "0013838336";
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                    }
+
+                    if (payment.ExTt == "72")
+                    {
+                        var supplier = suppliers[payment.Account];
+                        paymentModel.PaymentLine.CustomerId = "0";
+                        paymentModel.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
+                        payments.Add(dicKey++, paymentModel);
+                    }
+                }
                 if (transaction.AccountId == "1433107010")
                 {
-                    var paymentBs = paymentsDictionary.Values.FirstOrDefault(p => p.TransactionId == transaction.TransactioId);
-                    
-                    if (paymentBs != null && paymentBs.HouseBk == "UNE01")
+
+                    if (payment.HouseBk == "UNE01")
                     {
-                        if (paymentBs.A == "D")
+                        if (payment.A == "D")
                         {
-                            var customer = customers[paymentBs.Account];
-                            payment.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
-                            payment.PaymentLine.SupplierId = "0";
-
-                            payments.Add(dicKey++, payment);
-
-                        } else
+                            var customer = customers[payment.Account];
+                            paymentModel.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                        else
                         {
-                            if(paymentBs.PostRule == "+N7")
+                            if (payment.PostRule == "+N7")
                             {
-                                //trebuie furnizata logica
-                                //payment.PaymentLine.CustomerId = "0013838336";
-                                //payment.PaymentLine.SupplierId = "0";
-
-                                //payments.Add(dicKey++, payment);
-
-                            } else
-                            {
-                                payment.PaymentLine.CustomerId = "0030490303";
-                                payment.PaymentLine.SupplierId = "0030490303";
-
-                                payments.Add(dicKey++, payment);
-                            }
-
-                        }
-                    }
-
-                }
-
-                if (transaction.AccountId == "1010000100")
-                {
-                    payment.PaymentLine.CustomerId = "0030490303";
-                    payment.PaymentLine.SupplierId = "0030490303";
-
-                    payments.Add(dicKey++, payment);
-
-                }
-                
-
-                if (transaction.AccountId == "1403102010")
-                {
-                    var paymentBs = paymentsDictionary.Values.FirstOrDefault(p => p.TransactionId == transaction.TransactioId);
-
-                    if (paymentBs != null && paymentBs.HouseBk == "UNW01")
-                    {
-                        if (paymentBs.A == "D")
-                        {
-                            var customer = customers[paymentBs.Account];
-                            payment.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
-                            payment.PaymentLine.SupplierId = "0";
-
-                            payments.Add(dicKey++, payment);
-                        } else if (paymentBs.A == "K")
-                        {
-                            var supplier = suppliers[paymentBs.Account];
-
-                            payment.PaymentLine.CustomerId = "0";
-                            payment.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
-
-                            payments.Add(dicKey++, payment);
-                        } else
-                        {
-                            payment.PaymentLine.CustomerId = "0030490303";
-                            payment.PaymentLine.SupplierId = "0030490303";
-
-                            payments.Add(dicKey++, payment);
-                        }
-                    }
-                }
-                
-                 if (transaction.AccountId == "1403107010")
-                {
-                    var paymentBs = paymentsDictionary.Values.FirstOrDefault(p => p.TransactionId == transaction.TransactioId);
-
-                    if (paymentBs != null && paymentBs.HouseBk == "UNB01")
-                    {
-                        if(paymentBs.ExTt == "85" || paymentBs.ExTt == "82")
-                        {
-                            payment.PaymentLine.CustomerId = "00361536";
-                            payment.PaymentLine.SupplierId = "0";
-
-                            payments.Add(dicKey++, payment);
-                        }
-
-                        if (paymentBs.ExTt == "808" || paymentBs.ExTt == "6" || paymentBs.ExTt == "814" || paymentBs.ExTt == "835" || paymentBs.ExTt == "401")
-                        {
-                            payment.PaymentLine.CustomerId = "0030490303";
-                            payment.PaymentLine.SupplierId = "0030490303";
-
-                            payments.Add(dicKey++, payment);
-                        }
-
-                        if (paymentBs.ExTt == "201")
-                        {
-                            var supplier = suppliers.Values.FirstOrDefault(s => s.AccountId == paymentBs.Account);
-
-                            payment.PaymentLine.CustomerId = "0";
-                            payment.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
-
-                            payments.Add(dicKey++, payment);
-                        }
-
-                        if (paymentBs.ExTt == "51" ||  paymentBs.ExTt == "20")
-                        {
-                            if (paymentBs.A == "D")
-                            {
-                                var customer = customers[paymentBs.Account];
-                                payment.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
-                                payment.PaymentLine.SupplierId = "0";
-                            }
-                            else if (paymentBs.A == "K" && paymentBs.Account != "8400" && paymentBs.Account != "400")
-                            {
-                                var supplier = suppliers[paymentBs.Account];
-
-                                payment.PaymentLine.CustomerId = "0";
-                                payment.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
-
-                                payments.Add(dicKey++, payment);
-
+                                paymentModel.PaymentLine.CustomerId = "0013838336";
+                                paymentModel.PaymentLine.SupplierId = "0";
+                                payments.Add(dicKey++, paymentModel);
                             }
                             else
                             {
-                                payment.PaymentLine.CustomerId = "0030490303";
-                                payment.PaymentLine.SupplierId = "0030490303";
-
-                                payments.Add(dicKey++, payment);
-
+                                paymentModel.PaymentLine.CustomerId = "0030490303";
+                                paymentModel.PaymentLine.SupplierId = "0030490303";
+                                payments.Add(dicKey++, paymentModel);
                             }
-
 
                         }
                     }
+
                 }
-                
-                Console.WriteLine(dicKey);
-                
+                if (transaction.AccountId == "1010000100")
+                {
+                    paymentModel.PaymentLine.CustomerId = "0030490303";
+                    paymentModel.PaymentLine.SupplierId = "0030490303";
+                    payments.Add(dicKey++, paymentModel);
 
+                }
+
+                if (transaction.AccountId == "1403102010")
+                {
+                    if (payment.HouseBk == "UNW01")
+                    {
+                        if (payment.A == "D")
+                        {
+                            var customer = customers[payment.Account];
+                            paymentModel.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                        else if (payment.A == "K")
+                        {
+                            var supplier = suppliers[payment.Account];
+                            paymentModel.PaymentLine.CustomerId = "0";
+                            paymentModel.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                        else
+                        {
+                            paymentModel.PaymentLine.CustomerId = "0030490303";
+                            paymentModel.PaymentLine.SupplierId = "0030490303";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                    }
+                }
+               
+                if (transaction.AccountId == "1403107010")
+                {
+                    if (payment.HouseBk == "UNB01")
+                    {
+                        if (payment.ExTt == "85" || payment.ExTt == "82")
+                        {
+                            paymentModel.PaymentLine.CustomerId = "00361536";
+                            paymentModel.PaymentLine.SupplierId = "0";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+
+                        if (payment.ExTt == "808" || payment.ExTt == "6" || payment.ExTt == "814" || payment.ExTt == "835" || payment.ExTt == "401")
+                        {
+                            paymentModel.PaymentLine.CustomerId = "0030490303";
+                            paymentModel.PaymentLine.SupplierId = "0030490303";
+                            payments.Add(dicKey++, paymentModel);
+                        }
+
+                        if (payment.ExTt == "201")
+                        {
+                            var supplier = suppliers.Values.FirstOrDefault(s => s.AccountId == payment.Account);
+                            paymentModel.PaymentLine.CustomerId = "0";
+                            paymentModel.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
+                            payments.Add(dicKey++, paymentModel);
+                        }
+                  
+                       if (payment.ExTt == "51" || payment.ExTt == "20")
+                       {
+                           if (payment.A == "D")
+                           {
+                               var customer = customers[payment.Account];
+                               paymentModel.PaymentLine.CustomerId = utility.MapFiscalCode(customer.Name, customer.FiscalCode, customer.Country, euCountrie);
+                               paymentModel.PaymentLine.SupplierId = "0";
+                               payments.Add(dicKey++, paymentModel);
+                           }
+                           else if (payment.A == "K" && payment.Account != "8400" && payment.Account != "400")
+                           {
+                               var supplier = suppliers[payment.Account];
+                               paymentModel.PaymentLine.CustomerId = "0";
+                               paymentModel.PaymentLine.SupplierId = utility.MapFiscalCode(supplier.Name, supplier.FiscalCode, supplier.Country, euCountrie);
+                               payments.Add(dicKey++, paymentModel);
+                           }
+                           else
+                           {
+                               paymentModel.PaymentLine.CustomerId = "0030490303";
+                               paymentModel.PaymentLine.SupplierId = "0030490303";
+                               payments.Add(dicKey++, paymentModel);
+                           }
+                       }
+                    }
+                }
             }
-
-
 
             var debit = payments.Values.Where(p => p.PaymentLine.DebitCreditIndicator == "D").Sum(p => p.PaymentLine.Amount);
             var credit = (payments.Values.Where(p => p.PaymentLine.DebitCreditIndicator == "C").Sum(p => p.PaymentLine.Amount)) * -1;
@@ -334,8 +289,6 @@ namespace SAFTReport.Core.XmlBuilders
                     );
                 section.Add(paymentSection);
             }
-
-
             return section;
         }
     }
