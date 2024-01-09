@@ -43,15 +43,15 @@ var builder = Host.CreateDefaultBuilder(args)
 var host = builder.Build();
 using var serviceScope = host.Services.CreateScope();
 var services = serviceScope.ServiceProvider;
-Console.WriteLine("Luna Raportare: ");
+Console.Write("Luna Raportare: ");
 var month = int.Parse(Console.ReadLine());
-Console.WriteLine("An Raportare: ");
+Console.Write("An Raportare: ");
 var year = int.Parse(Console.ReadLine());
 Console.WriteLine("Procesarea a inceput.....");
 
 try
 {
-    var path = $"C:\\Users\\Vali\\Desktop\\Repo\\SAFT_CCC_xml_generate\\auditFile_{month}_{year}.xml";
+    var path = $"C:\\Users\\Vali\\Outmost S.R.L\\OutMost - Documents\\SAFT CCC transfer files\\XML_Reports\\Shoe_{year}_{month}.xml";
     var validationService = services.GetRequiredService<ValidationService>();
     validationService.ValidateBalanceSheetAccounts();
 
